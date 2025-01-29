@@ -42,7 +42,7 @@ def inventory_to_dict(inventory_repository_path:str = "../asset_data") -> dict:
                     db[hostname] = {}
                     db[hostname]["hostname"] = hostname #To comply with common data format
                     db[hostname]["chassis"] = data['hardware']['model']
-                    db[hostname]["location"] = data['location']['building']
+                    db[hostname]["location"] = f"{data['location']['building']} {data['location']['room']}"
 
                     #db[hostname] = data #Debug line to show raw data
                 except yaml.YAMLError as e:

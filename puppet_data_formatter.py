@@ -113,8 +113,32 @@ def get_node_os(node_os_path:str) -> str:
         return None
     return YAML_TO_PROPERTIES[templatename]
 
+def get_node_location(puppet_data_path: str) -> dict:
+    ret = {}
+    site_path = puppet_data_path + "/site_tier_0"
+    pretty_names = {
+        '3370a'   : ('CS3370a', "Computer Sciences"),
+        '2360'    : ('CS2360', 'Computer Sciences'),
+        'b240'    : ('CSB240', "Computer Sciences"),
+        'oneneck' : ('OneNeck', "OneNeck"),
+        'wid'     : ('WID', 'WID'),
+        'fiu'     : ('FIU', 'FIU'),
+        'syra'    : ('Syracuse', 'Syracuse'),
+        'syrb'    : ('CS2360', 'Computer Sciences'),
+        'wisc'    : ('CS2360', 'Computer Sciences'),
+        'unl'     : ('UNL', 'UNL'),
+    }
+
+    for ent in os.listdir(site_path):
+        for k, v in pretty_names.items():
+            if k in os.readlink(site_path + '/' +  ent):
+                ret.update({ent.removesuffix(".yaml") : f"{v[1]} {v[0]}"})
+
+    return ret
+
 def load_yaml_files(puppet_data_path: str) -> dict:
     nodes_data = {}
+    sites_data = get_node_location(puppet_data_path)
     for filename in os.listdir(os.path.join(puppet_data_path, 'node')):
         
         #only parse config files
@@ -143,7 +167,12 @@ def load_yaml_files(puppet_data_path: str) -> dict:
                     nodes_data[hostname]['network_hostname'] = network_hostname
                     nodes_data[hostname]['bmc_address'] = bmc_address
                     nodes_data[hostname]['interfaces'] = interfaces #keep for parity checks
-                    
+             
+                    if hostname in sites_data.keys():
+                        nodes_data[hostname]['location'] = sites_data[hostname]
+                    else:
+                        nodes_data[hostname]['location'] = ""
+
                     # Add interfaces to the node data
                     # Only add the most relevant interface
                     nodes_data[hostname]["mac_address"] = ""

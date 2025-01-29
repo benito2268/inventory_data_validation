@@ -53,12 +53,24 @@ def main():
     #print(f"Hosts existing only in Cobbler:{sorted(cobbler_hosts - puppet_hosts - inventory_hosts)}") #example
     #print(f"Hosts existing only in Puppet:{sorted(puppet_hosts - cobbler_hosts - inventory_hosts)}")
 
+    # find site mismatch
+    # puppet doesn't store rack or elevation but we can check building/room
+    print()
+    print("Puppet and Inventory Site Mismatch")
+    puppet_inventory_site_mismatch = []
+    for host in puppet_hosts & inventory_hosts:
+        inventory_site = inventory_db[host]["location"]
+        puppet_site = puppet_db[host]["location"]
+
+        if inventory_site != puppet_site:
+            puppet_inventory_site_mismatch.append([host, inventory_site, puppet_site])
+    print(tabulate.tabulate(puppet_inventory_site_mismatch, headers=["Host", "Inventory Site", "Puppet Site"]))
+
+    print()
     print("Mismatch summary:")
     print(f"IPv4 Mismatch: {len(puppet_cobbler_ipv4_mismatch)} / {len(puppet_hosts & cobbler_hosts)}")
     print(f"MAC Mismatch: {len(puppet_cobbler_mac_mismatch)} / {len(puppet_hosts & cobbler_hosts)}")
     print(f"OS Mismatch: {len(puppet_cobbler_os_mismatch)} / {len(puppet_hosts & cobbler_hosts)}")
-
-    
-    
+    print(f"Site Mismatch: {len(puppet_inventory_site_mismatch)} / {len(puppet_hosts & inventory_hosts)}")
 
 main()
